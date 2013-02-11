@@ -4,6 +4,9 @@ import com.google.inject.Exposed;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import org.jboss.netty.bootstrap.ClientBootstrap;
+import org.jboss.netty.bootstrap.ConnectionlessBootstrap;
+import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.socket.nio.*;
 import org.jboss.netty.util.HashedWheelTimer;
 import org.jboss.netty.util.ThreadNameDeterminer;
@@ -75,6 +78,24 @@ public class NettyModule extends PrivateModule {
   @Exposed
   public NioDatagramChannelFactory getNioDatagramChannelFactory(NioDatagramWorkerPool workerPool) {
     return new NioDatagramChannelFactory(workerPool);
+  }
+
+  @Provides
+  @Exposed
+  public ClientBootstrap getClientBootstrap(NioClientSocketChannelFactory channelFactory) {
+    return new ClientBootstrap(channelFactory);
+  }
+
+  @Provides
+  @Exposed
+  public ServerBootstrap getServerBootstrap(NioServerSocketChannelFactory channelFactory) {
+    return new ServerBootstrap(channelFactory);
+  }
+
+  @Provides
+  @Exposed
+  public ConnectionlessBootstrap getConnectionlessBootstrap(NioDatagramChannelFactory channelFactory) {
+    return new ConnectionlessBootstrap(channelFactory);
   }
 
 }
