@@ -1,5 +1,6 @@
 package org.robotninjas.netty.guice.oio;
 
+import com.google.inject.Exposed;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -79,16 +80,19 @@ public class NettyOioModule extends PrivateModule {
   }
 
   @Provides
+  @Exposed
   public ClientBootstrap getClientBootstrap(@DatagramChannelFactory OioClientSocketChannelFactory factory) {
     return new ClientBootstrap(factory);
   }
 
   @Provides
+  @Exposed
   public ServerBootstrap getServerBootstrap(@ClientChannelFactory OioServerSocketChannelFactory factory) {
     return new ServerBootstrap(factory);
   }
 
   @Provides
+  @Exposed
   public ConnectionlessBootstrap getConnectionlessBootstrap(@ServerChannelFactory OioDatagramChannelFactory factory) {
     return new ConnectionlessBootstrap(factory);
   }
