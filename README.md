@@ -1,3 +1,5 @@
+A Guice module that creates and exposes Timer, ClientBootstrap, ServerBootstrap, and ConnectionlessBootstrap
+
 Get It
 ------
 

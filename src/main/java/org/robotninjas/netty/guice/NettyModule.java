@@ -16,21 +16,52 @@ import org.jboss.netty.util.Timer;
 
 import java.util.concurrent.Executor;
 
+/**
+ * A Guice module that creates and exposes Timer, ClientBootstrap, ServerBootstrap, and ConnectionlessBootstrap
+ */
 public class NettyModule extends PrivateModule {
 
+  private static final int DEFAULT_WORKERS = Runtime.getRuntime().availableProcessors();
+  private static final int DEFAULT_CLIENT_BOSSES = 1;
+  private static final int DEFAULT_SERVER_BOSSES = 1;
   private final int numWorkers;
-  private final int numClientBoss;
-  private final int numServerBoss;
+  private final int numClientBosses;
+  private final int numServerBosses;
 
-  public NettyModule(int numWorkers, int numClientBoss, int numServerBoss) {
+  /**
+   * Usefuls when you are creating clients and/or servers
+   *
+   * @param numWorkers      number of worker threads
+   * @param numClientBosses number of client boss threads
+   * @param numServerBosses number of server boss threads
+   */
+  public NettyModule(int numWorkers, int numClientBosses, int numServerBosses) {
     this.numWorkers = numWorkers;
-    this.numClientBoss = numClientBoss;
-    this.numServerBoss = numServerBoss;
+    this.numClientBosses = numClientBosses;
+    this.numServerBosses = numServerBosses;
+  }
+
+  /**
+   * Useful when you will only be creating clients.
+   *
+   * @param numWorkers      number of worker threads
+   * @param numClientBosses number of client boss threads
+   */
+  public NettyModule(int numWorkers, int numClientBosses) {
+    this(numWorkers, numClientBosses, DEFAULT_SERVER_BOSSES);
+  }
+
+  /**
+   * Creates a Netty module setting all thread pools to their default levels
+   */
+  public NettyModule() {
+    this(DEFAULT_WORKERS, DEFAULT_CLIENT_BOSSES, DEFAULT_SERVER_BOSSES);
   }
 
   @Override
   protected void configure() {
     bind(Timer.class).toInstance(new HashedWheelTimer());
+    expose(Timer.class);
     bind(ThreadNameDeterminer.class).toInstance(ThreadNameDeterminer.PROPOSED);
   }
 
@@ -83,7 +114,7 @@ public class NettyModule extends PrivateModule {
   @Singleton
   @ClientBossPool
   public NioClientBossPool getNioClientBossPool(@PoolExecutor Executor executor, Timer timer, ThreadNameDeterminer nameDeterminer) {
-    final NioClientBossPool pool = new NioClientBossPool(executor, numClientBoss, timer, nameDeterminer);
+    final NioClientBossPool pool = new NioClientBossPool(executor, numClientBosses, timer, nameDeterminer);
     addShutdownHook(pool);
     return pool;
   }
@@ -92,7 +123,7 @@ public class NettyModule extends PrivateModule {
   @Singleton
   @ServerBossPool
   public NioServerBossPool getNioServerBossPool(@PoolExecutor Executor executor, ThreadNameDeterminer nameDeterminer) {
-    final NioServerBossPool pool = new NioServerBossPool(executor, numServerBoss, nameDeterminer);
+    final NioServerBossPool pool = new NioServerBossPool(executor, numServerBosses, nameDeterminer);
     addShutdownHook(pool);
     return pool;
   }
