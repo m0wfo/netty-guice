@@ -11,5 +11,5 @@ import static java.lang.annotation.ElementType.PARAMETER;
 @com.google.inject.BindingAnnotation
 @Retention(RetentionPolicy.RUNTIME)
 @Target({FIELD, METHOD, PARAMETER})
-public @interface NettyPoolExecutor {
+@interface DatagramWorkerPool {
 }

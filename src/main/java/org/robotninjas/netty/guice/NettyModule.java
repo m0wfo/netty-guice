@@ -4,9 +4,11 @@ import com.google.inject.Exposed;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import org.jboss.netty.bootstrap.Bootstrap;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.bootstrap.ConnectionlessBootstrap;
 import org.jboss.netty.bootstrap.ServerBootstrap;
+import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.socket.nio.*;
 import org.jboss.netty.util.HashedWheelTimer;
 import org.jboss.netty.util.ThreadNameDeterminer;
@@ -32,70 +34,123 @@ public class NettyModule extends PrivateModule {
     bind(ThreadNameDeterminer.class).toInstance(ThreadNameDeterminer.PROPOSED);
   }
 
-  @Provides
-  @Singleton
-  @NettyWorkerPool
-  public NioWorkerPool getNioWorkerPool(@NettyPoolExecutor Executor executor, ThreadNameDeterminer nameDeterminer) {
-    return new NioWorkerPool(executor, numWorkers, nameDeterminer);
+  protected void addShutdownHook(final ChannelFactory factory) {
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override public void run() {
+        factory.releaseExternalResources();
+        factory.shutdown();
+      }
+    });
+  }
+
+  protected void addShutdownHook(final AbstractNioWorkerPool<?> pool) {
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override public void run() {
+        pool.releaseExternalResources();
+        pool.shutdown();
+      }
+    });
+  }
+
+  protected void addShutdownHook(final AbstractNioBossPool<?> pool) {
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override public void run() {
+        pool.releaseExternalResources();
+        pool.shutdown();
+      }
+    });
+  }
+
+  protected void addShutdownHook(final Bootstrap bootstrap) {
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override public void run() {
+        bootstrap.releaseExternalResources();
+        bootstrap.shutdown();
+      }
+    });
   }
 
   @Provides
   @Singleton
-  @NettyClientBossPool
-  public NioClientBossPool getNioClientBossPool(@NettyPoolExecutor Executor executor, Timer timer, ThreadNameDeterminer nameDeterminer) {
-    return new NioClientBossPool(executor, numClientBoss, timer, nameDeterminer);
+  @WorkerPool
+  public NioWorkerPool getNioWorkerPool(@PoolExecutor Executor executor, ThreadNameDeterminer nameDeterminer) {
+    final NioWorkerPool pool = new NioWorkerPool(executor, numWorkers, nameDeterminer);
+    addShutdownHook(pool);
+    return pool;
   }
 
   @Provides
   @Singleton
-  @NettyServerBossPool
-  public NioServerBossPool getNioServerBossPool(@NettyPoolExecutor Executor executor, ThreadNameDeterminer nameDeterminer) {
-    return new NioServerBossPool(executor, numServerBoss, nameDeterminer);
+  @ClientBossPool
+  public NioClientBossPool getNioClientBossPool(@PoolExecutor Executor executor, Timer timer, ThreadNameDeterminer nameDeterminer) {
+    final NioClientBossPool pool = new NioClientBossPool(executor, numClientBoss, timer, nameDeterminer);
+    addShutdownHook(pool);
+    return pool;
   }
 
   @Provides
   @Singleton
-  @NettyDgramWorkerPool
-  public NioDatagramWorkerPool getNioDatagramWorkerPool(@NettyPoolExecutor Executor executor) {
-    return new NioDatagramWorkerPool(executor, numWorkers);
+  @ServerBossPool
+  public NioServerBossPool getNioServerBossPool(@PoolExecutor Executor executor, ThreadNameDeterminer nameDeterminer) {
+    final NioServerBossPool pool = new NioServerBossPool(executor, numServerBoss, nameDeterminer);
+    addShutdownHook(pool);
+    return pool;
   }
 
   @Provides
-  @Exposed
-  public NioServerSocketChannelFactory getNioServerSocketChannelFactory(@NettyServerBossPool NioServerBossPool bossPool,
-                                                                        @NettyWorkerPool NioWorkerPool workerPool) {
-    return new NioServerSocketChannelFactory(bossPool, workerPool);
+  @Singleton
+  @DatagramWorkerPool
+  public NioDatagramWorkerPool getNioDatagramWorkerPool(@PoolExecutor Executor executor) {
+    final NioDatagramWorkerPool pool = new NioDatagramWorkerPool(executor, numWorkers);
+    addShutdownHook(pool);
+    return pool;
   }
 
   @Provides
-  @Exposed
-  public NioClientSocketChannelFactory getNioClientSocketChannelFactory(@NettyClientBossPool NioClientBossPool bossPool,
-                                                                        @NettyWorkerPool NioWorkerPool workerPool) {
-    return new NioClientSocketChannelFactory(bossPool, workerPool);
+  public NioServerSocketChannelFactory getNioServerSocketChannelFactory(@ServerBossPool NioServerBossPool bossPool,
+                                                                        @WorkerPool NioWorkerPool workerPool) {
+    final NioServerSocketChannelFactory factory = new NioServerSocketChannelFactory(bossPool, workerPool);
+    addShutdownHook(factory);
+    return factory;
   }
 
   @Provides
-  @Exposed
+  public NioClientSocketChannelFactory getNioClientSocketChannelFactory(@ClientBossPool NioClientBossPool bossPool,
+                                                                        @WorkerPool NioWorkerPool workerPool) {
+    final NioClientSocketChannelFactory factory = new NioClientSocketChannelFactory(bossPool, workerPool);
+    addShutdownHook(factory);
+    return factory;
+  }
+
+  @Provides
   public NioDatagramChannelFactory getNioDatagramChannelFactory(NioDatagramWorkerPool workerPool) {
-    return new NioDatagramChannelFactory(workerPool);
+    final NioDatagramChannelFactory factory = new NioDatagramChannelFactory(workerPool);
+    addShutdownHook(factory);
+    return factory;
   }
 
   @Provides
   @Exposed
   public ClientBootstrap getClientBootstrap(NioClientSocketChannelFactory channelFactory) {
-    return new ClientBootstrap(channelFactory);
+    final ClientBootstrap bootstrap = new ClientBootstrap(channelFactory);
+    addShutdownHook(bootstrap);
+    return bootstrap;
   }
 
   @Provides
   @Exposed
   public ServerBootstrap getServerBootstrap(NioServerSocketChannelFactory channelFactory) {
-    return new ServerBootstrap(channelFactory);
+    final ServerBootstrap bootstrap = new ServerBootstrap(channelFactory);
+    addShutdownHook(bootstrap);
+    return bootstrap;
   }
 
   @Provides
   @Exposed
   public ConnectionlessBootstrap getConnectionlessBootstrap(NioDatagramChannelFactory channelFactory) {
-    return new ConnectionlessBootstrap(channelFactory);
+    final ConnectionlessBootstrap bootstrap = new ConnectionlessBootstrap(channelFactory);
+    addShutdownHook(bootstrap);
+    return bootstrap;
   }
 
 }
