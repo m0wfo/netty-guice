@@ -1,4 +1,4 @@
-package org.robotninjas.netty.guice;
+package org.robotninjas.netty.guice.oio;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -11,5 +11,5 @@ import static java.lang.annotation.ElementType.PARAMETER;
 @com.google.inject.BindingAnnotation
 @Retention(RetentionPolicy.RUNTIME)
 @Target({FIELD, METHOD, PARAMETER})
-@interface DatagramChannelFactory {
+@interface WorkerExecutor {
 }

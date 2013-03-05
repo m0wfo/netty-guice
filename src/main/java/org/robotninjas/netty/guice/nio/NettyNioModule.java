@@ -1,4 +1,4 @@
-package org.robotninjas.netty.guice;
+package org.robotninjas.netty.guice.nio;
 
 import com.google.inject.Exposed;
 import com.google.inject.PrivateModule;
@@ -12,13 +12,16 @@ import org.jboss.netty.channel.socket.nio.*;
 import org.jboss.netty.util.HashedWheelTimer;
 import org.jboss.netty.util.ThreadNameDeterminer;
 import org.jboss.netty.util.Timer;
+import org.robotninjas.netty.guice.annotations.ClientChannelFactory;
+import org.robotninjas.netty.guice.annotations.DatagramChannelFactory;
+import org.robotninjas.netty.guice.annotations.ServerChannelFactory;
 
 import java.util.concurrent.Executor;
 
 /**
  * A Guice module that creates and exposes ClientBootstrap, ServerBootstrap, and ConnectionlessBootstrap
  */
-public class NettyNioBootstrapModule extends PrivateModule {
+public class NettyNioModule extends PrivateModule {
 
   private static final int DEFAULT_WORKERS = Runtime.getRuntime().availableProcessors();
   private static final int DEFAULT_CLIENT_BOSSES = 1;
@@ -34,7 +37,7 @@ public class NettyNioBootstrapModule extends PrivateModule {
    * @param numClientBosses number of client boss threads
    * @param numServerBosses number of server boss threads
    */
-  public NettyNioBootstrapModule(int numWorkers, int numClientBosses, int numServerBosses) {
+  public NettyNioModule(int numWorkers, int numClientBosses, int numServerBosses) {
     this.numWorkers = numWorkers;
     this.numClientBosses = numClientBosses;
     this.numServerBosses = numServerBosses;
@@ -46,14 +49,14 @@ public class NettyNioBootstrapModule extends PrivateModule {
    * @param numWorkers      number of worker threads
    * @param numClientBosses number of client boss threads
    */
-  public NettyNioBootstrapModule(int numWorkers, int numClientBosses) {
+  public NettyNioModule(int numWorkers, int numClientBosses) {
     this(numWorkers, numClientBosses, DEFAULT_SERVER_BOSSES);
   }
 
   /**
    * Creates a Netty module setting all thread pools to their default levels
    */
-  public NettyNioBootstrapModule() {
+  public NettyNioModule() {
     this(DEFAULT_WORKERS, DEFAULT_CLIENT_BOSSES, DEFAULT_SERVER_BOSSES);
   }
 
@@ -95,7 +98,7 @@ public class NettyNioBootstrapModule extends PrivateModule {
 
   @Provides
   @Singleton
-  @WorkerPool
+  @org.robotninjas.netty.guice.nio.WorkerPool
   public NioWorkerPool getNioWorkerPool(@PoolExecutor Executor executor, ThreadNameDeterminer nameDeterminer) {
     return addShutdownHook(new NioWorkerPool(executor, numWorkers, nameDeterminer));
   }
@@ -124,14 +127,14 @@ public class NettyNioBootstrapModule extends PrivateModule {
   @Provides
   @Singleton
   @ServerChannelFactory
-  public NioServerSocketChannelFactory getNioServerSocketChannelFactory(@ServerBossPool NioServerBossPool bossPool, @WorkerPool NioWorkerPool workerPool) {
+  public NioServerSocketChannelFactory getNioServerSocketChannelFactory(@ServerBossPool NioServerBossPool bossPool, @org.robotninjas.netty.guice.nio.WorkerPool NioWorkerPool workerPool) {
     return addShutdownHook(new NioServerSocketChannelFactory(bossPool, workerPool));
   }
 
   @Provides
   @Singleton
   @ClientChannelFactory
-  public NioClientSocketChannelFactory getNioClientSocketChannelFactory(@ClientBossPool NioClientBossPool bossPool, @WorkerPool NioWorkerPool workerPool) {
+  public NioClientSocketChannelFactory getNioClientSocketChannelFactory(@ClientBossPool NioClientBossPool bossPool, @org.robotninjas.netty.guice.nio.WorkerPool NioWorkerPool workerPool) {
     return addShutdownHook(new NioClientSocketChannelFactory(bossPool, workerPool));
   }
 
