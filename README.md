@@ -1,4 +1,4 @@
-A Guice module that creates and exposes Timer, ClientBootstrap, ServerBootstrap, and ConnectionlessBootstrap
+A Guice module that creates and exposes ClientBootstrap, ServerBootstrap, and ConnectionlessBootstrap. All pools and channel factories are shared between created bootstraps; shutdown hooks are registered.
 
 Get It
 ------
