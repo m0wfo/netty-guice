@@ -98,7 +98,7 @@ public class NettyNioModule extends PrivateModule {
 
   @Provides
   @Singleton
-  @org.robotninjas.netty.guice.nio.WorkerPool
+  @WorkerPool
   public NioWorkerPool getNioWorkerPool(@PoolExecutor Executor executor, ThreadNameDeterminer nameDeterminer) {
     return addShutdownHook(new NioWorkerPool(executor, numWorkers, nameDeterminer));
   }
@@ -127,14 +127,14 @@ public class NettyNioModule extends PrivateModule {
   @Provides
   @Singleton
   @ServerChannelFactory
-  public NioServerSocketChannelFactory getNioServerSocketChannelFactory(@ServerBossPool NioServerBossPool bossPool, @org.robotninjas.netty.guice.nio.WorkerPool NioWorkerPool workerPool) {
+  public NioServerSocketChannelFactory getNioServerSocketChannelFactory(@ServerBossPool NioServerBossPool bossPool, @WorkerPool NioWorkerPool workerPool) {
     return addShutdownHook(new NioServerSocketChannelFactory(bossPool, workerPool));
   }
 
   @Provides
   @Singleton
   @ClientChannelFactory
-  public NioClientSocketChannelFactory getNioClientSocketChannelFactory(@ClientBossPool NioClientBossPool bossPool, @org.robotninjas.netty.guice.nio.WorkerPool NioWorkerPool workerPool) {
+  public NioClientSocketChannelFactory getNioClientSocketChannelFactory(@ClientBossPool NioClientBossPool bossPool, @WorkerPool NioWorkerPool workerPool) {
     return addShutdownHook(new NioClientSocketChannelFactory(bossPool, workerPool));
   }
 
