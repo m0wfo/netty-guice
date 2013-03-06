@@ -17,9 +17,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:git://github.com/mgodave/guicified-eventbus.git</connection>
-        <developerConnection>scm:git:git@github.com:mgodave/guicified-eventbus.git</developerConnection>
-        <url>https://github.com/mgodave/guicified-eventbus</url>
+        <connection>scm:git:git://github.com/mgodave/netty-guice.git</connection>
+        <developerConnection>scm:git:git@github.com:mgodave/netty-guice.git</developerConnection>
+        <url>https://github.com/mgodave/netty-guice</url>
     </scm>
 
     <dependencies>
